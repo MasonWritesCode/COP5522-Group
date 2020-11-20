@@ -1,0 +1,42 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  ns/call  ns/call  name
+100.80      0.02     0.02    26942   748.31   748.31  checkGuess
+  0.00      0.02     0.00    26942     0.00     0.00  makeGuess
+  0.00      0.02     0.00       74     0.00     0.00  microtime
+  0.00      0.02     0.00       12     0.00     0.00  init
+  0.00      0.02     0.00        4     0.00     0.00  get_microtime_resolution
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 49.60% of 0.02 seconds
+
+index % time    self  children    called     name
+                0.02    0.00   26942/26942       main [2]
+[1]    100.0    0.02    0.00   26942         checkGuess [1]
+-----------------------------------------------
+                                                 <spontaneous>
+[2]    100.0    0.00    0.02                 main [2]
+                0.02    0.00   26942/26942       checkGuess [1]
+                0.00    0.00   26942/26942       makeGuess [3]
+                0.00    0.00      12/12          init [5]
+                0.00    0.00       8/74          microtime [4]
+                0.00    0.00       4/4           get_microtime_resolution [6]
+-----------------------------------------------
+                0.00    0.00   26942/26942       main [2]
+[3]      0.0    0.00    0.00   26942         makeGuess [3]
+-----------------------------------------------
+                0.00    0.00       8/74          main [2]
+                0.00    0.00      66/74          get_microtime_resolution [6]
+[4]      0.0    0.00    0.00      74         microtime [4]
+-----------------------------------------------
+                0.00    0.00      12/12          main [2]
+[5]      0.0    0.00    0.00      12         init [5]
+-----------------------------------------------
+                0.00    0.00       4/4           main [2]
+[6]      0.0    0.00    0.00       4         get_microtime_resolution [6]
+                0.00    0.00      66/74          microtime [4]
+-----------------------------------------------

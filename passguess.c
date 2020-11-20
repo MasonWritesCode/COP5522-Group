@@ -4,38 +4,26 @@
 #include <stdlib.h>
 
 char* makeGuess(char *guess, char *known, int length, int* unknown) {
-	int i;
 
-	// find the index of the first unknown character
-	for(i = *unknown; i < length; i++) {
-		if(known[i] == 0) {
-					break;
-		}
-	}
+	int i = *unknown;
 	
-	guess[i]++;
+        guess[i]++;
 	
-	//printf("guess is : %s\n", guess);
 	return guess;
 }
 
 char checkGuess(char *guess, char *pw, char *known, int length, int* unknown) {
-	int i;
-	char isCorrect = 1;
+	char isCorrect = 0;
+	int i = *unknown;
 
-	for(i = *unknown; i < length; i++) {
-		if(guess[i] == pw[i]) {
-			// we found a matching character
-			known[i] = 1;
-			unknown = unknown + 1;
-					}
-		else {
-			// we found a character that did not match
-			known[i] = 0;
-			isCorrect = 0;
+	if(guess[i] == pw[i]) {
+		// we found a matching character
+		known[i] = 1;
+		*unknown += 1;
+		if (i == length) {
+			isCorrect = 1;
 		}
 	}
-	
 	return isCorrect;
 }
 

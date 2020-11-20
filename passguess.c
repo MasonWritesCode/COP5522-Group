@@ -46,46 +46,53 @@ int main(int argc, char **argv){
 	char * line = NULL;
   	size_t len = 0;
 	ssize_t read;
+	int lines = 0;
 
 	fp = fopen("PASSWORDFILE", "r");
     		if (fp == NULL) {
 		printf("FILE NOT FOUND. TRY AGAIN");
         	exit(EXIT_FAILURE);
 	}
+    while(!feof(fp)) {
+  	char ch = fgetc(fp);
+  	if(ch == '\n'){
+    	   lines++;
+  	}
+    }
 
-    while ((read = getline(&line, &len, fp)) != -1) {
+    for (int x = 0; x < lines; x++){
+        read = getline(&line, &len, fp);
 
  	long length = strlen(line);
 	char solved = 0;
   	char *pw, *guess, *known;
 	int unknown = 0;
 
-  pw = init(length);
-  guess = init(length);
-  known = init(length);
+  	pw = init(length);
+  	guess = init(length);
+  	known = init(length);
 
-  int i;
-  for(i = 0; i < length; i++) {
-  	pw[i] = line[i];
-  }
+  	for(int i = 0; i < length; i++) {
+  		pw[i] = line[i];
+  	}
 
-  time1 = microtime();
-  while(!solved) {
-	  guess = makeGuess(guess, known, length, &unknown);
-	  solved = checkGuess(guess, pw, known, length, &unknown);
-  }
-  time2 = microtime();
+  	time1 = microtime();
+  	while(!solved) {
+	  	guess = makeGuess(guess, known, length, &unknown);
+	  	solved = checkGuess(guess, pw, known, length, &unknown);
+  	}	
+  	time2 = microtime();
 
-  t = time2-time1;
-  totalTime += t;
-  printf("The password is %s", guess);
-  printf("Intermediate Time = %g us\t  Timer Resolution = %g us\t\n", t, get_microtime_resolution());
+  	t = time2-time1;
+  	totalTime += t;
+  	printf("The password is %s", guess);
+  	printf("Intermediate Time = %g us\t  Timer Resolution = %g us\t\n", t, get_microtime_resolution());
 
-  free(pw);
-  free(guess);
-  free(known);
-
+  	free(pw);
+  	free(guess);
+  	free(known);
     }
+
   printf("TOTAL RUNTIME = %g us\n", totalTime);
     fclose(fp);
     if (line)

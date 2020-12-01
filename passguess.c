@@ -74,14 +74,16 @@ int main(int argc, char **argv){
     }
 
     char *guess, *known;
-    guess = init(1000);
-    known = init(1000);
 
+    guess = init(127);
+    known = init(127);
     int solved;
     int unknown;
     for(int j=0; j < lines; j++){
         unknown = 1;
 	solved = 0;
+	memset(guess, '\0', 127);
+	memset(known, '\0', 127);
   	time1 = microtime();
   	while(!solved) {
 	  	guess = makeGuess(guess, &unknown);

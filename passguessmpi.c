@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 
-MPI_Status status;
+//MPI_Status status;
 
 char* makeGuess(char *guess, char *known, int length, int* unknown) {
 
@@ -55,11 +55,17 @@ printf("RANK %d\t and SIZE %d\n",rank, size);
  int c, lines =1;
 FILE * fp = fopen("PASSWORDFILE", "r");
 
-        /* count the newline characters */
-    while ( (c=fgetc(fp)) != EOF ) {
-        if ( c == '\n' )
-            lines++;
+
+    while(!feof(fp)) {
+  	char ch = fgetc(fp);
+  	if(ch == '\n'){
+    	   lines++;
+  	}
     }
+
+ rewind(fp);
+
+
 	printf("Line count-%d\n",lines);
 MPI_Finalize();
 }
@@ -79,7 +85,9 @@ if (rank >0) {
 	}
 	
 
-  	
+  time1 = microtime();	
+printf("TIME1 is %f",time1);
+
     while ((read = getline(&line, &len, fp)) != -1) {
 
  	long length = strlen(line);
@@ -96,13 +104,12 @@ if (rank >0) {
   	pw[i] = line[i];
   }
 
-  time1 = microtime();
-printf("TIME1 is %f",time1);
+  
 
   while(!solved) {
 
 	  guess = makeGuess(guess, known, length, &unknown);
-//incrementer+=1;
+incrementer+=1;
 	  solved = checkGuess(guess, pw, known, length, &unknown);
   }
   time2 = microtime();

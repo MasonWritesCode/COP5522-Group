@@ -3,24 +3,24 @@
 #include <string.h>
 #include <stdlib.h>
 
-char* makeGuess(char *guess, char *known, int length, int* unknown) {
+char* makeGuess(char *guess, int* unknown) {
 
-	int i = *unknown;
+	int i = *unknown - 1;
 	
         guess[i]++;
 	
 	return guess;
 }
 
-char checkGuess(char *guess, char *pw, char *known, int length, int* unknown) {
+char checkGuess(char *guess, char pw, char *known, int length, int* unknown) {
 	char isCorrect = 0;
-	int i = *unknown;
+	int i = *unknown - 1;
 
-	if(guess[i] == pw[i]) {
+	if(guess[i] == pw) {
 		// we found a matching character
 		known[i] = 1;
 		*unknown += 1;
-		if (i == length) {
+		if (i == length - 1) {
 			isCorrect = 1;
 		}
 	}
@@ -49,10 +49,11 @@ int main(int argc, char **argv){
 	int lines = 0;
 
 	fp = fopen("PASSWORDFILE", "r");
-    		if (fp == NULL) {
-		printf("FILE NOT FOUND. TRY AGAIN");
-        	exit(EXIT_FAILURE);
+    	if (fp == NULL) {
+  	  printf("FILE NOT FOUND. TRY AGAIN");
+          exit(EXIT_FAILURE);
 	}
+
     while(!feof(fp)) {
   	char ch = fgetc(fp);
   	if(ch == '\n'){
@@ -60,38 +61,43 @@ int main(int argc, char **argv){
   	}
     }
 
+    rewind(fp);
+
+    char passwords [lines][1000];
     for (int x = 0; x < lines; x++){
         read = getline(&line, &len, fp);
-
  	long length = strlen(line);
-	char solved = 0;
-  	char *pw, *guess, *known;
-	int unknown = 0;
+	passwords[x][0] = (char) length;
+	for (int y = 1; y < length; y++){
+		passwords[x][y] = line[y-1];
+	}
+    }
 
-  	pw = init(length);
-  	guess = init(length);
-  	known = init(length);
+    char *guess, *known;
 
-  	for(int i = 0; i < length; i++) {
-  		pw[i] = line[i];
-  	}
-
+    guess = init(127);
+    known = init(127);
+    int solved;
+    int unknown;
+    for(int j=0; j < lines; j++){
+        unknown = 1;
+	solved = 0;
+	memset(guess, '\0', 127);
+	memset(known, '\0', 127);
   	time1 = microtime();
   	while(!solved) {
-	  	guess = makeGuess(guess, known, length, &unknown);
-	  	solved = checkGuess(guess, pw, known, length, &unknown);
+	  	guess = makeGuess(guess, &unknown);
+	  	solved = checkGuess(guess, passwords[j][unknown], known, (int) passwords[j][0], &unknown);
   	}	
   	time2 = microtime();
 
   	t = time2-time1;
   	totalTime += t;
-  	printf("The password is %s", guess);
+  	printf("The password is %s ", guess);
   	printf("Intermediate Time = %g us\t  Timer Resolution = %g us\t\n", t, get_microtime_resolution());
-
-  	free(pw);
+    }
   	free(guess);
   	free(known);
-    }
 
   printf("TOTAL RUNTIME = %g us\n", totalTime);
     fclose(fp);

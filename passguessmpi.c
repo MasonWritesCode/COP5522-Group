@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <mpi.h>
 
-//MPI_Status status;
-
 char* makeGuess(char *guess, char *known, int length, int* unknown) {
 
 	int i = *unknown;
@@ -38,103 +36,160 @@ char* init(int length) {
 
 int main(int argc, char **argv){
 
-int rank, size;
+int rank, size, linesPerNode,fileLines;
 
-
+MPI_Status status;
 MPI_Init(&argc,&argv);
 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 MPI_Comm_size(MPI_COMM_WORLD,&size); 
-printf("RANK %d\t and SIZE %d\n",rank, size);
-  if(argc != 1)
-  {
-    fprintf(stderr, "USAGE: %s Password Length\n", argv[1]);
-    exit(1);
-  }
+//printf("RANK %d\t and SIZE %d\n",rank, size);
+
+
 
   if (rank == 0) {
- int c, lines =1;
-FILE * fp = fopen("PASSWORDFILE", "r");
-
-
-    while(!feof(fp)) {
-  	char ch = fgetc(fp);
-  	if(ch == '\n'){
-    	   lines++;
-  	}
-    }
-
- rewind(fp);
-
-
-	printf("Line count-%d\n",lines);
-MPI_Finalize();
-}
-
-if (rank >0) {
-  double t, time1, time2, incrementer = 0, totalTime = 0.00;
- 
-	FILE * fp = fopen("PASSWORDFILE", "r");
+	double t, time1, time2,totalTime = 0.00;
+	FILE * fp;
 	char * line = NULL;
   	size_t len = 0;
 	ssize_t read;
+	int dest, c,linesLastNode;
+	fileLines = 0;
 
 
-    	if (fp == NULL) {
-		printf("FILE NOT FOUND. TRY AGAIN");
-        	exit(EXIT_FAILURE);
+fp = fopen("PASSWORDFILE.txt", "r");
+
+	while ( (c=fgetc(fp)) != EOF ) {
+		if ( c != '\n' )
+		{
+	    		read = getline(&line, &len, fp);
+						fileLines++;
+  		}
+    	}
+	//printf("fileLines-%d\n",fileLines);
+	//printf("size is %d",size);
+	if (fileLines % (size-1) == 0) 
+	{ 
+		//printf("EQUAL");
+		linesPerNode = fileLines/(size-1);
+		linesLastNode= linesPerNode;
+		//printf ("Lines and last: %d and %d\n",linesPerNode,linesLastNode);
 	}
+	else { 
+		//printf("UNEQUAL");
+		linesPerNode = fileLines/(size-1);
+		linesLastNode = (fileLines - (linesPerNode * (size -2)));
+		//printf ("Lines and last: %d and %d\n",linesPerNode,linesLastNode);
+	}
+
+//rewind(fp);
 	
 
-  time1 = microtime();	
-printf("TIME1 is %f",time1);
+ for (dest=1; dest < size; dest++)
+    {
+	if (dest == (size -1) ) {
+		linesPerNode = linesLastNode;
+	}
+		MPI_Send(&linesPerNode,1,MPI_INT,dest,1,MPI_COMM_WORLD);
+		MPI_Send(&fileLines,1,MPI_INT,dest,1,MPI_COMM_WORLD);
+//printf("linesPerNode %d and rank %d", linesPerNode,dest);
+	
+    }
+	time1 = microtime();
+	for (dest=1; dest < size; dest++)
+    {
+	
+		MPI_Recv(&totalTime,1,MPI_DOUBLE,dest,1,MPI_COMM_WORLD,&status);
+		//printf("NODE %d ran for %g us\t  Timer Resolution = %g us\t\n", dest,totalTime, get_microtime_resolution());
+		totalTime += totalTime;
+    }
+	time2 = microtime();
+	t = time2-time1;
+	printf("TOTAL RUNTIME = %g us\n", t);
+	printf("COMMUNICATION TIME = %g us\n",t - totalTime);
+	
+	fclose(fp);
+	MPI_Finalize();
 
+}
+
+if (rank > 0) {
+	double t, time1, time2,totalTime = 0.00;
+	FILE * fp = fopen("PASSWORDFILE.txt", "r");
+	char * line = NULL;
+  	size_t len = 0;
+	ssize_t read;
+	int endLine, startLine, curFileLine,linesPerNode;
+  	
+	MPI_Recv(&linesPerNode,1,MPI_INT,0,1,MPI_COMM_WORLD,&status);
+  	MPI_Recv(&fileLines,1,MPI_INT,0,1,MPI_COMM_WORLD,&status);
+	//printf("RANK %d LINESPER %d FILESIZE %d\n",rank,linesPerNode,fileLines);
+
+ if (rank != (size -1)) { 
+	startLine = (linesPerNode * rank)-(linesPerNode -1);
+ 	endLine = startLine + linesPerNode;
+	//printf("start: %d and end: %d\n",startLine, endLine);
+ 	}
+ 	else {
+		//printf("LAST NODE:%d\t",rank);  
+		startLine = (fileLines - linesPerNode)+1;
+		
+ 		endLine = fileLines + 1; 
+		//printf("start: %d and end: %d\n",startLine, endLine);
+	}
+    curFileLine=0;
     while ((read = getline(&line, &len, fp)) != -1) {
-
+	curFileLine++;
+	if ((startLine <= curFileLine) && (curFileLine < endLine)) {
+	time1 = microtime();
+	//printf("start %d and curfileline %d and end line %d\n",startLine,curFileLine,endLine);
  	long length = strlen(line);
 	char solved = 0;
   	char *pw, *guess, *known;
 	int unknown = 0;
 
-  pw = init(length);
-  guess = init(length);
-  known = init(length);
-
-  int i;
-  for(i = 0; i < length; i++) {
-  	pw[i] = line[i];
-  }
-
-  
-
+  	pw = init(length);
+  	guess = init(length);
+  	known = init(length);
+	
+	int i;
+  	for(i = 0; i < length; i++) {
+  		pw[i] = line[i];
+  	}
+ 
   while(!solved) {
 
 	  guess = makeGuess(guess, known, length, &unknown);
-incrementer+=1;
+
 	  solved = checkGuess(guess, pw, known, length, &unknown);
   }
-  time2 = microtime();
-printf("TIME1 is %f",time1);
+ time2 = microtime();
+//printf("The password on rank %d is %s", rank,guess);
 
-  t = time2-time1;
+ t = time2-time1;
+ //printf("rank %d time %g\n",rank,t);
   totalTime += t;
-  printf("The password is %s", guess);
-  printf("Intermediate Time = %g us\t  Timer Resolution = %g us\t\n", t, get_microtime_resolution());
 
   free(pw);
   free(guess);
   free(known);
 
     }
+	}
+
+MPI_Send(&totalTime,1,MPI_DOUBLE,0,1,MPI_COMM_WORLD);
+		
+//printf("linesPerNode %d and rank %d", linesPerNode,dest);
+	
+   
+fclose(fp);
 MPI_Finalize();
 
-  printf("TOTAL RUNTIME = %g us\n", totalTime);
- //printf("Performance = %g increments \n", incrementer);
-    fclose(fp);
+
     if (line)
         free(line);
-    exit(EXIT_SUCCESS);
-}
-
-
+		
+	}
+	exit(EXIT_SUCCESS);
+ printf("HELP");
   return 0;
 }

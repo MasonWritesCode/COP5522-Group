@@ -1,13 +1,13 @@
-C=gcc
-CFLAG= -Wall -I.. -I. -O3
+CC=mpicc
+CFLAG=  -I. -Ofast -fopenmp
 
-EXECUTABLE=passguess
+EXECUTABLE=passguessmpi
 
 all: $(EXECUTABLE)
 
-passguess:  passguess.c microtime.h
+passguessmpi:  passguessmpi.c microtime.h
 	$(CC) $(CFLAG) -c microtime.c
-	$(CC) $(CFLAG) -o passguess passguess.c microtime.o
+	$(CC) $(CFLAG) -o passguessmpi passguessmpi.c microtime.o
 
 clean:
 	rm -f *.o *~ core

@@ -47,7 +47,7 @@ MPI_Comm_size(MPI_COMM_WORLD,&size);
 
 
   if (rank == 0) {
-	double t, time1, time2,totalTime = 0.00;
+	double t, time1, time2,totalTime;;
 	FILE * fp;
 	char * line = NULL;
   	size_t len = 0;
@@ -105,7 +105,8 @@ fp = fopen("PASSWORDFILE.txt", "r");
 	time2 = microtime();
 	t = time2-time1;
 	printf("TOTAL RUNTIME = %g us\n", t);
-	printf("COMMUNICATION TIME = %g us\n",t - totalTime);
+	printf("PROCESSING TIME = %g us\n",totalTime);
+	printf("COMMUNICATION TIME = %g us\n",t -totalTime); 
 	
 	fclose(fp);
 	MPI_Finalize();
@@ -163,7 +164,7 @@ if (rank > 0) {
 	  solved = checkGuess(guess, pw, known, length, &unknown);
   }
  time2 = microtime();
-//printf("The password on rank %d is %s", rank,guess);
+//printf("The password on rank %d is %s\t", rank,guess);
 
  t = time2-time1;
  //printf("rank %d time %g\n",rank,t);

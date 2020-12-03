@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 		//curFileLine=0;
 		#pragma omp parallel 
 		{
-		#pragma omp parallel for schedule(static) reduction(+:totalTime)
+		#pragma omp parallel for schedule(static)
 		for (curFileLine = 0; curFileLine < endLine; curFileLine++) {
 		//while ((read = getline(&line, &len, fp)) != -1) {
 			//curFileLine++;

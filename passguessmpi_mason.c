@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 		char * line = NULL;
   		size_t len = 0;
 		ssize_t read;
-		int dest, c,linesLastNode;
+		int dest, c,linesLastNode, done;
 		fileLines = 0;
 
 
@@ -94,15 +94,14 @@ int main(int argc, char **argv) {
 		}
 		time1 = microtime();
 		for (dest=1; dest < size; dest++) {
-			MPI_Recv(&totalTime,1,MPI_DOUBLE,dest,1,MPI_COMM_WORLD,&status);
-			if(DEBUG) printf("NODE %d ran for %g us\t  Timer Resolution = %g us\t\n", dest,totalTime, get_microtime_resolution());
-			totalTime += totalTime;
+			MPI_Recv(&done,1,MPI_INT,dest,1,MPI_COMM_WORLD,&status);
+			
 		}
 		time2 = microtime();
 		t = time2-time1;
 		printf("TOTAL RUNTIME = %g us\n", t);
-		printf("PROCESSING TIME = %g us\n",totalTime);
-		printf("COMMUNICATION TIME = %g us\n",t -totalTime); 
+		//printf("PROCESSING TIME = %g us\n",totalTime);
+		//printf("COMMUNICATION TIME = %g us\n",t -totalTime); 
 	
 		fclose(fp);
 		MPI_Finalize();
@@ -135,9 +134,8 @@ int main(int argc, char **argv) {
 			if(DEBUG) printf("start: %d and end: %d\n",startLine, endLine);
 		}
 
-		localTimes = malloc(fileLines * sizeof(double));
-		memset(localTimes, 0.0, fileLines*sizeof(double));
-
+		//localTimes = malloc(fileLines * sizeof(double));
+		//memset(localTimes, 0.0, fileLines*sizeof(double));
 		//curFileLine=0;
 		#pragma omp parallel 
 		{
@@ -147,7 +145,7 @@ int main(int argc, char **argv) {
 			//curFileLine++;
 			read = getline(&line, &len, fp);
 			if ((startLine <= curFileLine) && (curFileLine < endLine) && read != -1) {
-				time1 = microtime();
+				//time1 = microtime();
 				if(DEBUG) printf("start %d and curfileline %d and end line %d\n",startLine,curFileLine,endLine);
  				long length = strlen(line);
 				char solved = 0;
@@ -162,22 +160,25 @@ int main(int argc, char **argv) {
 				for(i = 0; i < length; i++) {
 					pw[i] = line[i];
 				}
- 
+				//#pragma omp parallel private(guess,solved) 
+				//{
 				while(!solved) {
 					guess = makeGuess(guess, known, length, &unknown);
 
 					solved = checkGuess(guess, pw, known, length, &unknown);
 				}
-				time2 = microtime();
-				if(DEBUG) printf("The password on rank %d is %s\t", rank, guess);
+				//}
+				//time2 = microtime();
+				if(DEBUG) 
+				printf("The password on rank %d is %s\t", rank, guess);
 
 				//t = time2-time1;
-				localTimes[curFileLine] = time2 - time1;
-				if(DEBUG) printf("rank %d time %g curFileLine %d linesPerNode %d\n", rank, t, curFileLine, linesPerNode);
+				//localTimes[curFileLine] = time2 - time1;
+				//if(DEBUG) printf("rank %d time %g curFileLine %d linesPerNode %d\n", rank, t, curFileLine, linesPerNode);
 
-				totalTime += localTimes[curFileLine];
+				//totalTime += localTimes[curFileLine];
 
-				if(DEBUG) printf("totaltime %g\n",totalTime);
+				//if(DEBUG) printf("totaltime %g\n",totalTime);
 
 				free(pw);
 				free(guess);
@@ -186,9 +187,9 @@ int main(int argc, char **argv) {
 			}
 		}
 		}
-
-		if(DEBUG) printf("final totaltime %g\n",totalTime);
-		MPI_Send(&totalTime,1,MPI_DOUBLE,0,1,MPI_COMM_WORLD);
+		int done = 1;
+		//if(DEBUG) printf("final totaltime %g\n",totalTime);
+		MPI_Send(&done,1,MPI_INT,0,1,MPI_COMM_WORLD);
 		
 		fclose(fp);
 		MPI_Finalize();

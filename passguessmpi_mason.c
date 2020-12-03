@@ -116,6 +116,7 @@ int main(int argc, char **argv) {
   		size_t len = 0;
 		ssize_t read;
 		int endLine, startLine, curFileLine,linesPerNode;
+		double * localTimes;
   	
 		MPI_Recv(&linesPerNode,1,MPI_INT,0,1,MPI_COMM_WORLD,&status);
   		MPI_Recv(&fileLines,1,MPI_INT,0,1,MPI_COMM_WORLD,&status);
@@ -133,10 +134,14 @@ int main(int argc, char **argv) {
  			endLine = fileLines + 1; 
 			if(DEBUG) printf("start: %d and end: %d\n",startLine, endLine);
 		}
+
+		localTimes = malloc(fileLines * sizeof(double));
+		memset(localTimes, 0.0, fileLines*sizeof(double));
+
 		//curFileLine=0;
 		#pragma omp parallel 
 		{
-		#pragma omp parallel for schedule(static)
+		#pragma omp parallel for schedule(static) reduction(+:totalTime)
 		for (curFileLine = 0; curFileLine < endLine; curFileLine++) {
 		//while ((read = getline(&line, &len, fp)) != -1) {
 			//curFileLine++;
@@ -164,12 +169,15 @@ int main(int argc, char **argv) {
 					solved = checkGuess(guess, pw, known, length, &unknown);
 				}
 				time2 = microtime();
-				if(DEBUG) printf("The password on rank %d is %s\t", rank,guess);
+				if(DEBUG) printf("The password on rank %d is %s\t", rank, guess);
 
-				t = time2-time1;
-				if(DEBUG) printf("rank %d time %g\n",rank,t);
-				#pragma omp critical 
-				totalTime += t;
+				//t = time2-time1;
+				localTimes[curFileLine] = time2 - time1;
+				if(DEBUG) printf("rank %d time %g curFileLine %d linesPerNode %d\n", rank, t, curFileLine, linesPerNode);
+
+				totalTime += localTimes[curFileLine];
+
+				if(DEBUG) printf("totaltime %g\n",totalTime);
 
 				free(pw);
 				free(guess);
@@ -179,6 +187,7 @@ int main(int argc, char **argv) {
 		}
 		}
 
+		if(DEBUG) printf("final totaltime %g\n",totalTime);
 		MPI_Send(&totalTime,1,MPI_DOUBLE,0,1,MPI_COMM_WORLD);
 		
 		fclose(fp);

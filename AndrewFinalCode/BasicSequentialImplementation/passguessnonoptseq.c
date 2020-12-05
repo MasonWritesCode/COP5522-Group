@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <microtime.h>
+#include "../microtime.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv){
   	size_t len = 0;
 	ssize_t read;
 
-	fp = fopen("PASSWORDFILE.txt", "r");
+	fp = fopen("../PASSWORDFILE.txt", "r");
     		if (fp == NULL) {
 		printf("FILE NOT FOUND. TRY AGAIN");
         	exit(EXIT_FAILURE);
@@ -108,4 +108,3 @@ time1 = microtime();
 
   return 0;
 }
-

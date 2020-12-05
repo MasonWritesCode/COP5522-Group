@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../../microtime.h"
+#include "../microtime.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -108,4 +108,3 @@ time1 = microtime();
 
   return 0;
 }
-

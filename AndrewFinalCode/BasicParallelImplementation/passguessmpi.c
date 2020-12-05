@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <microtime.h>
+#include "../../microtime.h"
 #include <string.h>
 #include <stdlib.h>
 #include <mpi.h>
@@ -56,7 +56,7 @@ MPI_Comm_size(MPI_COMM_WORLD,&size);
 	fileLines = 0;
 
 
-fp = fopen("PASSWORDFILE.txt", "r");
+fp = fopen("../PASSWORDFILE.txt", "r");
 
 	while ( (c=fgetc(fp)) != EOF ) {
 		if ( c != '\n' )
@@ -111,7 +111,7 @@ fp = fopen("PASSWORDFILE.txt", "r");
 
 if (rank > 0) {
 	double t, time1, time2,totalTime = 0.00;
-	FILE * fp = fopen("PASSWORDFILE.txt", "r");
+	FILE * fp = fopen("../PASSWORDFILE.txt", "r");
 	char * line = NULL;
   	size_t len = 0;
 	ssize_t read;

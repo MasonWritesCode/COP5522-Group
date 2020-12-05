@@ -1,43 +1,31 @@
 #include <stdio.h>
-#include <microtime.h>
+#include "../../microtime.h"
 #include <string.h>
 #include <stdlib.h>
 
 #define DEBUG 0
 
 char* makeGuess(char *guess, char *known, int length, int* unknown) {
-	int i;
 
-	// find the index of the first unknown character
-	for(i = *unknown; i < length; i++) {
-		if(known[i] == 0) {
-					break;
-		}
-	}
+	int i = *unknown;
 	
-	guess[i]++;
+        guess[i]++;
 	
-	//printf("guess is : %s\n", guess);
 	return guess;
 }
 
 char checkGuess(char *guess, char *pw, char *known, int length, int* unknown) {
-	int i;
-	char isCorrect = 1;
+	char isCorrect = 0;
+	int i = *unknown;
 
-	for(i = *unknown; i < length; i++) {
-		if(guess[i] == pw[i]) {
-			// we found a matching character
-			known[i] = 1;
-			unknown = unknown + 1;
-					}
-		else {
-			// we found a character that did not match
-			known[i] = 0;
-			isCorrect = 0;
+	if(guess[i] == pw[i]) {
+		// we found a matching character
+		known[i] = 1;
+		*unknown += 1;
+		if (i == length) {
+			isCorrect = 1;
 		}
 	}
-	
 	return isCorrect;
 }
 
@@ -61,7 +49,7 @@ int main(int argc, char **argv){
   	size_t len = 0;
 	ssize_t read;
 
-	fp = fopen("PASSWORDFILE.txt", "r");
+	fp = fopen("../PASSWORDFILE.txt", "r");
     		if (fp == NULL) {
 		printf("FILE NOT FOUND. TRY AGAIN");
         	exit(EXIT_FAILURE);
@@ -88,19 +76,19 @@ time1 = microtime();
 	  guess = makeGuess(guess, known, length, &unknown);
 	  solved = checkGuess(guess, pw, known, length, &unknown);
   }
-  if(DEBUG) printf("The password is %s", guess);
-
-
+  if (DEBUG) printf("The password is %s", guess);
   free(pw);
   free(guess);
   free(known);
 
     }
- time2 = microtime();
- t = time2-time1;
+  time2 = microtime();
+
+  t = time2-time1;
  
-  
+
   printf("TOTAL RUNTIME = %g us\t  Timer Resolution = %g us\t\n", t, get_microtime_resolution());
+
     fclose(fp);
     if (line)
         free(line);
@@ -108,4 +96,3 @@ time1 = microtime();
 
   return 0;
 }
-
